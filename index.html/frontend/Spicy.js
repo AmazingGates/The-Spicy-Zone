@@ -473,5 +473,6 @@ function deleteMediaFromLocal(index) {
 
 // Initialize the page
 window.addEventListener('DOMContentLoaded', function() {
-    console.log('SpicyZone initialized with backend:', API_BASE_URL);
+    console.log('SpicyZone initialized with backend:', https://spicyzone-backend.onrender.com);
+
 });
