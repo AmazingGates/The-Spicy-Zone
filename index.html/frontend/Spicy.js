@@ -18,7 +18,7 @@ const mediaFileInput = document.getElementById('media-file');
 const uploadSection = document.getElementById('upload-section');
 
 // Backend Configuration - DYNAMIC FOR DEPLOYMENT
-const API_BASE_URL = (() => {
+const https://spicyzone-backend.onrender.com = (() => {
     const hostname = window.location.hostname;
     
     // Development environments
@@ -35,7 +35,7 @@ const API_BASE_URL = (() => {
     return 'https://your-backend-url.onrender.com/api'; // CHANGE THIS
 })();
 
-console.log('API Base URL:', API_BASE_URL);
+console.log('API Base URL:', https://spicyzone-backend.onrender.com);
 
 // Track user state
 let isAdmin = false;
@@ -474,4 +474,5 @@ function deleteMediaFromLocal(index) {
 // Initialize the page
 window.addEventListener('DOMContentLoaded', function() {
     console.log('SpicyZone initialized with backend:', API_BASE_URL);
+
 });
