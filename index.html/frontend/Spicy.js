@@ -32,7 +32,7 @@ const https://spicyzone-backend.onrender.com = (() => {
     // Example for Heroku: return 'https://your-app-name.herokuapp.com/api';
     
     // TEMPORARY - Update this after you deploy your backend
-    return 'https://your-backend-url.onrender.com/api'; // CHANGE THIS
+    return 'https://spicyzone-backend.onrender.com/api'; // CHANGE THIS
 })();
 
 console.log('API Base URL:', https://spicyzone-backend.onrender.com);
@@ -82,7 +82,7 @@ async function checkUserPassword() {
     }
     
     try {
-        const response = await fetch(`${API_BASE_URL}/login`, {
+        const response = await fetch(`${https://spicyzone-backend.onrender.com}/login`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -125,7 +125,7 @@ async function checkAdminPassword() {
     }
     
     try {
-        const response = await fetch(`${API_BASE_URL}/login`, {
+        const response = await fetch(`${https://spicyzone-backend.onrender.com}/login`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -225,7 +225,7 @@ async function loadMediaGallery() {
         // Clear existing gallery
         mediaGallery.innerHTML = '<div class="loading">Loading media...</div>';
         
-        const response = await fetch(`${API_BASE_URL}/media`);
+        const response = await fetch(`${https://spicyzone-backend.onrender.com}/media`);
         
         if (!response.ok) {
             throw new Error('Failed to fetch media');
@@ -308,13 +308,13 @@ function addMediaToGallery(media) {
     
     if (media.type === 'image') {
         mediaItem.innerHTML = `
-            <img src="${API_BASE_URL}/media/${media.filename}" alt="Gallery image" loading="lazy">
+            <img src="${https://spicyzone-backend.onrender.com}/media/${media.filename}" alt="Gallery image" loading="lazy">
             ${isAdmin ? `<button class="delete-btn" data-filename="${media.filename}">×</button>` : ''}
         `;
     } else if (media.type === 'video') {
         mediaItem.innerHTML = `
             <video controls>
-                <source src="${API_BASE_URL}/media/${media.filename}" type="video/mp4">
+                <source src="${https://spicyzone-backend.onrender.com}/media/${media.filename}" type="video/mp4">
                 Your browser does not support the video tag.
             </video>
             ${isAdmin ? `<button class="delete-btn" data-filename="${media.filename}">×</button>` : ''}
@@ -351,7 +351,7 @@ async function handleMediaUpload(e) {
             formData.append('media', files[i]);
         }
         
-        const response = await fetch(`${API_BASE_URL}/upload`, {
+        const response = await fetch(`${https://spicyzone-backend.onrender.com}/upload`, {
             method: 'POST',
             body: formData
         });
@@ -473,6 +473,7 @@ function deleteMediaFromLocal(index) {
 
 // Initialize the page
 window.addEventListener('DOMContentLoaded', function() {
-    console.log('SpicyZone initialized with backend:', API_BASE_URL);
+    console.log('SpicyZone initialized with backend:', https://spicyzone-backend.onrender.com);
 
 });
+
