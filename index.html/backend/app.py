@@ -24,7 +24,7 @@ def create_app():
                 "https://*.netlify.app",
                 "https://*.vercel.app",
                 "https://*.github.io",
-                "https://your-spicyzone-frontend.netlify.app"  # Update with your actual frontend URL
+                "https://your-spicyzone-frontend.netlify.app"
             ],
             "methods": ["GET", "POST", "DELETE", "OPTIONS"],
             "allow_headers": ["Content-Type", "Authorization"]
@@ -35,8 +35,8 @@ def create_app():
     os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
     
     # Register blueprints
-    from backend.auth import auth_bp
-    from backend.media_routes import media_bp
+    from auth import auth_bp
+    from media_routes import media_bp
     
     app.register_blueprint(auth_bp)
     app.register_blueprint(media_bp)
