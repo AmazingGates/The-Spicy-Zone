@@ -17,25 +17,12 @@ const mediaUploadForm = document.getElementById('media-upload-form');
 const mediaFileInput = document.getElementById('media-file');
 const uploadSection = document.getElementById('upload-section');
 
-// Backend Configuration - DYNAMIC FOR DEPLOYMENT
-const API_BASE_URL = (() => {
-    const hostname = window.location.hostname;
-    
-    // Development environments
-    if (hostname === 'localhost' || hostname === '127.0.0.1') {
-        return 'http://localhost:5000/api';
-    }
-    
-    // Production - REPLACE WITH YOUR ACTUAL BACKEND URL AFTER DEPLOYMENT
-    // Example for Render.com: return 'https://spicyzone-backend.onrender.com/api';
-    // Example for Railway: return 'https://spicyzone-backend.up.railway.app/api';
-    // Example for Heroku: return 'https://your-app-name.herokuapp.com/api';
-    
-    // TEMPORARY - Update this after you deploy your backend
-    return 'https://spicyzone-backend.onrender.com/api'; // CHANGE THIS
-})();
+// ✅ YOUR EXACT BACKEND URL - NO CHANGES NEEDED
+const API_BASE_URL = 'https://spicyzone-backend.onrender.com/api';
 
-console.log('API Base URL:', API_BASE_URL);
+console.log('🎯 SpicyZone Configuration:');
+console.log('Frontend: https://thespicyzone.netlify.app');
+console.log('Backend:', API_BASE_URL);
 
 // Track user state
 let isAdmin = false;
@@ -62,6 +49,22 @@ adminPasswordInput.addEventListener('keyup', function(event) {
     }
 });
 
+// Connection test function
+async function testBackendConnection() {
+    try {
+        console.log('🔍 Testing backend connection...');
+        const response = await fetch('https://spicyzone-backend.onrender.com/health');
+        if (response.ok) {
+            const data = await response.json();
+            console.log('✅ Backend connected:', data);
+            return true;
+        }
+    } catch (error) {
+        console.error('❌ Backend connection failed:', error);
+    }
+    return false;
+}
+
 // Functions
 function showPasswordModal() {
     passwordModal.style.display = 'flex';
@@ -81,7 +84,15 @@ async function checkUserPassword() {
         return;
     }
     
+    // Test connection first
+    const isConnected = await testBackendConnection();
+    if (!isConnected) {
+        alert('⚠️ Backend server is starting up... Please wait 30 seconds and try again. (Render free tier)');
+        return;
+    }
+    
     try {
+        console.log('🔐 Attempting login...');
         const response = await fetch(`${API_BASE_URL}/login`, {
             method: 'POST',
             headers: {
@@ -90,28 +101,32 @@ async function checkUserPassword() {
             body: JSON.stringify({ password: enteredPassword })
         });
         
+        console.log('Login response status:', response.status);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
         const data = await response.json();
         
         if (data.success) {
-            // Correct password
+            console.log('✅ Login successful');
             currentPassword = enteredPassword;
             passwordModal.style.display = 'none';
             landingPage.style.display = 'none';
             mainContent.style.display = 'block';
             
-            // If they entered the admin password, give them admin access
             if (data.isAdmin) {
                 enableAdminMode();
             }
             
             await loadMediaGallery();
         } else {
-            // Incorrect password
+            console.log('❌ Login failed: Invalid password');
             showError();
         }
     } catch (error) {
-        console.error('Login error:', error);
-        // Fallback to local storage if backend is unavailable
+        console.error('💥 Login error:', error);
         handleOfflineLogin(enteredPassword);
     }
 }
@@ -133,16 +148,18 @@ async function checkAdminPassword() {
             body: JSON.stringify({ password: enteredPassword })
         });
         
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
         const data = await response.json();
         
         if (data.success && data.isAdmin) {
-            // Correct admin password
             currentPassword = enteredPassword;
             adminModal.style.display = 'none';
             enableAdminMode();
             await loadMediaGallery();
         } else {
-            // Incorrect password
             showAdminError();
         }
     } catch (error) {
@@ -152,11 +169,11 @@ async function checkAdminPassword() {
 }
 
 function handleOfflineLogin(enteredPassword) {
-    // Fallback to original local storage logic
     const USER_PASSWORD = "spicy2023";
     const ADMIN_PASSWORD = "adminSpicy2023";
     
     if (enteredPassword === USER_PASSWORD || enteredPassword === ADMIN_PASSWORD) {
+        console.log('📱 Offline login successful');
         passwordModal.style.display = 'none';
         landingPage.style.display = 'none';
         mainContent.style.display = 'block';
@@ -222,52 +239,48 @@ function logout() {
 
 async function loadMediaGallery() {
     try {
-        // Clear existing gallery
-        mediaGallery.innerHTML = '<div class="loading">Loading media...</div>';
+        mediaGallery.innerHTML = '<div style="text-align: center; padding: 40px; color: #ff3333; font-size: 18px;">🔄 Loading media from server...</div>';
         
+        console.log('📥 Fetching media from backend...');
         const response = await fetch(`${API_BASE_URL}/media`);
         
         if (!response.ok) {
-            throw new Error('Failed to fetch media');
+            throw new Error(`HTTP error! status: ${response.status}`);
         }
         
         const mediaArray = await response.json();
         
-        // Clear loading message
         mediaGallery.innerHTML = '';
         
         if (mediaArray.length === 0) {
-            mediaGallery.innerHTML = '<div class="no-media">No media available yet.</div>';
+            mediaGallery.innerHTML = '<div style="text-align: center; padding: 40px; color: #ccc; font-size: 16px;">No media available yet. Upload some as admin!</div>';
             return;
         }
         
-        // Add each media item to the gallery
+        console.log(`✅ Loaded ${mediaArray.length} media items`);
         mediaArray.forEach((media) => {
             addMediaToGallery(media);
         });
         
     } catch (error) {
-        console.error('Error loading media from backend:', error);
-        // Fallback to local storage
+        console.error('💥 Error loading media:', error);
+        mediaGallery.innerHTML = '<div style="text-align: center; padding: 20px; color: #ff6b6b; background: #2a2a2a; margin: 10px; border-radius: 5px;">⚠️ Backend connection issue. Using local storage.</div>';
         loadMediaGalleryFromLocal();
     }
 }
 
 function loadMediaGalleryFromLocal() {
-    // Clear existing gallery
     mediaGallery.innerHTML = '';
     
-    // Get media from localStorage (fallback)
     const STORAGE_KEY = "spicyZoneMedia";
     const storedMedia = localStorage.getItem(STORAGE_KEY);
     const mediaArray = storedMedia ? JSON.parse(storedMedia) : [];
     
     if (mediaArray.length === 0) {
-        mediaGallery.innerHTML = '<div class="no-media">No media available. Backend connection failed.</div>';
+        mediaGallery.innerHTML = '<div style="text-align: center; padding: 40px; color: #ccc;">No media available. Backend connection failed.</div>';
         return;
     }
     
-    // Add each media item to the gallery
     mediaArray.forEach((media, index) => {
         const mediaItem = document.createElement('div');
         mediaItem.className = 'media-item';
@@ -290,7 +303,6 @@ function loadMediaGalleryFromLocal() {
         mediaGallery.appendChild(mediaItem);
     });
     
-    // Add event listeners to delete buttons (only if admin)
     if (isAdmin) {
         document.querySelectorAll('.delete-btn').forEach(button => {
             button.addEventListener('click', function() {
@@ -323,7 +335,6 @@ function addMediaToGallery(media) {
     
     mediaGallery.appendChild(mediaItem);
     
-    // Add event listener to delete button if admin
     if (isAdmin) {
         const deleteBtn = mediaItem.querySelector('.delete-btn');
         if (deleteBtn) {
@@ -344,6 +355,28 @@ async function handleMediaUpload(e) {
         alert('Please select at least one file to upload.');
         return;
     }
+
+    // Check file sizes (Render free tier limit)
+    let totalSize = 0;
+    for (let file of files) {
+        totalSize += file.size;
+        if (file.size > 10 * 1024 * 1024) { // 10MB per file
+            alert(`File "${file.name}" is too large. Maximum size is 10MB.`);
+            return;
+        }
+    }
+    
+    if (totalSize > 20 * 1024 * 1024) { // 20MB total
+        alert('Total files size too large. Maximum total size is 20MB.');
+        return;
+    }
+
+    // Test connection first
+    const isConnected = await testBackendConnection();
+    if (!isConnected) {
+        alert('🚨 Backend server is starting up... This can take up to 60 seconds on Render free tier. Please wait and try again.');
+        return;
+    }
     
     try {
         const formData = new FormData();
@@ -351,28 +384,30 @@ async function handleMediaUpload(e) {
             formData.append('media', files[i]);
         }
         
+        console.log('⬆️ Uploading files...');
         const response = await fetch(`${API_BASE_URL}/upload`, {
             method: 'POST',
             body: formData
         });
         
-        const result = await response.json();
+        console.log('Upload response status:', response.status);
         
-        if (response.ok) {
-            // Reset file input
-            mediaFileInput.value = '';
-            
-            // Reload gallery
-            await loadMediaGallery();
-            
-            alert(result.message);
-        } else {
-            alert('Upload failed: ' + result.error);
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('Upload failed:', errorText);
+            throw new Error(`Upload failed: ${response.status}`);
         }
         
+        const result = await response.json();
+        console.log('✅ Upload successful:', result);
+        
+        mediaFileInput.value = '';
+        await loadMediaGallery();
+        alert(`✅ ${result.message}`);
+        
     } catch (error) {
-        console.error('Upload error:', error);
-        // Fallback to local storage
+        console.error('💥 Upload error:', error);
+        alert('❌ Upload failed: ' + error.message + '\n\nFalling back to local storage...');
         handleMediaUploadToLocal(files);
     }
 }
@@ -380,41 +415,30 @@ async function handleMediaUpload(e) {
 function handleMediaUploadToLocal(files) {
     const STORAGE_KEY = "spicyZoneMedia";
     
-    // Process each selected file
     for (let i = 0; i < files.length; i++) {
         const file = files[i];
         
-        // Check if file is image or video
         if (!file.type.startsWith('image/') && !file.type.startsWith('video/')) {
-            alert(`File "${file.name}" is not an image or video. Please select valid media files.`);
+            alert(`File "${file.name}" is not an image or video.`);
             continue;
         }
         
-        // Create a URL for the file
         const fileURL = URL.createObjectURL(file);
-        
-        // Get existing media from localStorage
         const storedMedia = localStorage.getItem(STORAGE_KEY);
         const mediaArray = storedMedia ? JSON.parse(storedMedia) : [];
         
-        // Add new media
         mediaArray.push({
             url: fileURL,
             type: file.type,
             name: file.name
         });
         
-        // Save back to localStorage
         localStorage.setItem(STORAGE_KEY, JSON.stringify(mediaArray));
     }
     
-    // Reset file input
     mediaFileInput.value = '';
-    
-    // Reload gallery
     loadMediaGalleryFromLocal();
-    
-    alert('Media uploaded successfully to local storage! (Backend connection failed)');
+    alert('📱 Media saved to local storage (not shared with other users)');
 }
 
 async function deleteMedia(filename) {
@@ -430,19 +454,18 @@ async function deleteMedia(filename) {
         const result = await response.json();
         
         if (response.ok) {
-            // Remove from gallery
             const mediaItem = document.querySelector(`.media-item[data-id="${filename}"]`);
             if (mediaItem) {
                 mediaItem.remove();
             }
-            alert('Media deleted successfully!');
+            alert('✅ Media deleted successfully!');
         } else {
-            alert('Delete failed: ' + result.error);
+            alert('❌ Delete failed: ' + result.error);
         }
         
     } catch (error) {
         console.error('Delete error:', error);
-        alert('Failed to delete media. Please try again.');
+        alert('❌ Failed to delete media. Please try again.');
     }
 }
 
@@ -453,26 +476,23 @@ function deleteMediaFromLocal(index) {
         return;
     }
     
-    // Get existing media from localStorage
     const storedMedia = localStorage.getItem(STORAGE_KEY);
     const mediaArray = storedMedia ? JSON.parse(storedMedia) : [];
     
-    // Remove the media item
     if (index >= 0 && index < mediaArray.length) {
-        // Revoke the object URL to free memory
         URL.revokeObjectURL(mediaArray[index].url);
         mediaArray.splice(index, 1);
-        
-        // Save back to localStorage
         localStorage.setItem(STORAGE_KEY, JSON.stringify(mediaArray));
-        
-        // Reload gallery
         loadMediaGalleryFromLocal();
     }
 }
 
 // Initialize the page
-window.addEventListener('DOMContentLoaded', function() {
-    console.log('SpicyZone initialized with backend:', API_BASE_URL);
-
+window.addEventListener('DOMContentLoaded', async function() {
+    console.log('🚀 SpicyZone Website Initialized');
+    console.log('🌐 Frontend: https://thespicyzone.netlify.app');
+    console.log('🔧 Backend: https://spicyzone-backend.onrender.com');
+    
+    // Test backend connection on load
+    await testBackendConnection();
 });
