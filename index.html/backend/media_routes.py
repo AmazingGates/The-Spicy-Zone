@@ -4,7 +4,7 @@ from werkzeug.utils import secure_filename
 import uuid
 from datetime import datetime
 
-media_bp = Blueprint('media', __name__)
+media_bp = Blueprint('media', __name__)  # Make sure it's just 'media'
 
 # Allowed file extensions
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'mp4', 'mov', 'avi', 'webm', 'mkv'}
@@ -125,4 +125,5 @@ def delete_media(filename):
 
 def init_app(app):
     """Initialize the media blueprint with app configuration"""
+
     media_bp.config = app.config
