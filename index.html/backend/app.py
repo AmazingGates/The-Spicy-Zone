@@ -12,19 +12,17 @@ def create_app():
     # Configuration
     app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-secret-key')
     app.config['UPLOAD_FOLDER'] = 'uploads'
-    app.config['MAX_CONTENT_LENGTH'] = 100 * 1024 * 1024  # 100MB max file size
+    app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024  # 50MB max file size
     
-    # Enhanced CORS configuration for production
+    # EXACT CORS for your deployment
     CORS(app, resources={
         r"/api/*": {
             "origins": [
                 "http://localhost:3000",
-                "http://127.0.0.1:3000",
+                "http://127.0.0.1:3000", 
                 "http://localhost:5000",
-                "https://*.netlify.app",
-                "https://*.vercel.app",
-                "https://*.github.io",
-                "https://your-spicyzone-frontend.netlify.app"
+                "https://thespicyzone.netlify.app",  # ✅ Your exact frontend
+                "https://*.netlify.app"
             ],
             "methods": ["GET", "POST", "DELETE", "OPTIONS"],
             "allow_headers": ["Content-Type", "Authorization"]
@@ -44,11 +42,16 @@ def create_app():
     # Health check endpoint
     @app.route('/')
     def home():
-        return {'message': 'SpicyZone Backend API', 'status': 'running'}
+        return {'message': 'SpicyZone Backend API', 'status': 'running', 'version': '1.0'}
     
     @app.route('/health')
     def health_check():
         return {'status': 'healthy', 'service': 'SpicyZone Backend'}
+    
+    # Warmup endpoint for Render free tier
+    @app.route('/warmup')
+    def warmup():
+        return {'status': 'warmed up'}
     
     return app
 
