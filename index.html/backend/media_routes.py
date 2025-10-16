@@ -4,7 +4,7 @@ from werkzeug.utils import secure_filename
 import uuid
 from datetime import datetime
 
-media_bp = Blueprint('media', __name__)  # Make sure it's just 'media'
+media_bp = Blueprint('media', __name__)
 
 # Allowed file extensions
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'mp4', 'mov', 'avi', 'webm', 'mkv'}
@@ -49,7 +49,7 @@ def get_media_list():
         print(f"Error getting media list: {e}")
         return []
 
-@media_bp.route('/api/media', methods=['GET'])
+@media_bp.route('/media', methods=['GET'])  # ✅ REMOVED duplicate /api
 def get_media():
     """Get all media files"""
     try:
@@ -58,7 +58,7 @@ def get_media():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@media_bp.route('/api/media/<filename>')
+@media_bp.route('/media/<filename>')  # ✅ REMOVED duplicate /api
 def serve_media(filename):
     """Serve media files"""
     try:
@@ -66,7 +66,7 @@ def serve_media(filename):
     except FileNotFoundError:
         return jsonify({'error': 'File not found'}), 404
 
-@media_bp.route('/api/upload', methods=['POST'])
+@media_bp.route('/upload', methods=['POST'])  # ✅ REMOVED duplicate /api
 def upload_media():
     """Upload new media files"""
     try:
@@ -108,7 +108,7 @@ def upload_media():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@media_bp.route('/api/media/<filename>', methods=['DELETE'])
+@media_bp.route('/media/<filename>', methods=['DELETE'])  # ✅ REMOVED duplicate /api
 def delete_media(filename):
     """Delete a media file"""
     try:
@@ -125,5 +125,4 @@ def delete_media(filename):
 
 def init_app(app):
     """Initialize the media blueprint with app configuration"""
-
     media_bp.config = app.config
