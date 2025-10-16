@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify, send_from_directory
+from flask import Blueprint, request, jsonify, send_from_directory, current_app
 import os
 from werkzeug.utils import secure_filename
 import uuid
@@ -15,10 +15,11 @@ def allowed_file(filename):
 
 def get_media_list():
     """Get list of all media files with their metadata"""
-    media_files = []
-    upload_folder = media_bp.config['UPLOAD_FOLDER']
-    
     try:
+        # Use current_app to get the upload folder path
+        upload_folder = current_app.config['UPLOAD_FOLDER']
+        media_files = []
+        
         if not os.path.exists(upload_folder):
             os.makedirs(upload_folder)
             return []
@@ -49,7 +50,7 @@ def get_media_list():
         print(f"Error getting media list: {e}")
         return []
 
-@media_bp.route('/media', methods=['GET'])  # ✅ REMOVED duplicate /api
+@media_bp.route('/media', methods=['GET'])
 def get_media():
     """Get all media files"""
     try:
@@ -58,15 +59,15 @@ def get_media():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@media_bp.route('/media/<filename>')  # ✅ REMOVED duplicate /api
+@media_bp.route('/media/<filename>')
 def serve_media(filename):
     """Serve media files"""
     try:
-        return send_from_directory(media_bp.config['UPLOAD_FOLDER'], filename)
+        return send_from_directory(current_app.config['UPLOAD_FOLDER'], filename)
     except FileNotFoundError:
         return jsonify({'error': 'File not found'}), 404
 
-@media_bp.route('/upload', methods=['POST'])  # ✅ REMOVED duplicate /api
+@media_bp.route('/upload', methods=['POST'])
 def upload_media():
     """Upload new media files"""
     try:
@@ -80,6 +81,9 @@ def upload_media():
         if len(files) == 0 or (len(files) == 1 and files[0].filename == ''):
             return jsonify({'error': 'No files selected'}), 400
         
+        # Use current_app to get the upload folder path
+        upload_folder = current_app.config['UPLOAD_FOLDER']
+        
         for file in files:
             if file.filename == '':
                 continue
@@ -91,10 +95,10 @@ def upload_media():
                 secure_name = secure_filename(unique_filename)
                 
                 # Ensure upload directory exists
-                os.makedirs(media_bp.config['UPLOAD_FOLDER'], exist_ok=True)
+                os.makedirs(upload_folder, exist_ok=True)
                 
                 # Save file
-                file.save(os.path.join(media_bp.config['UPLOAD_FOLDER'], secure_name))
+                file.save(os.path.join(upload_folder, secure_name))
                 uploaded_files.append(secure_name)
             else:
                 return jsonify({'error': f'File type not allowed: {file.filename}'}), 400
@@ -108,11 +112,13 @@ def upload_media():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@media_bp.route('/media/<filename>', methods=['DELETE'])  # ✅ REMOVED duplicate /api
+@media_bp.route('/media/<filename>', methods=['DELETE'])
 def delete_media(filename):
     """Delete a media file"""
     try:
-        file_path = os.path.join(media_bp.config['UPLOAD_FOLDER'], filename)
+        # Use current_app to get the upload folder path
+        upload_folder = current_app.config['UPLOAD_FOLDER']
+        file_path = os.path.join(upload_folder, filename)
         
         if os.path.exists(file_path):
             os.remove(file_path)
@@ -122,7 +128,3 @@ def delete_media(filename):
             
     except Exception as e:
         return jsonify({'error': str(e)}), 500
-
-def init_app(app):
-    """Initialize the media blueprint with app configuration"""
-    media_bp.config = app.config
