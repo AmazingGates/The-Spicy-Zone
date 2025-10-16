@@ -1,27 +1,39 @@
 from flask import Blueprint, request, jsonify
 import os
-from dotenv import load_dotenv
-
-load_dotenv()
 
 auth_bp = Blueprint('auth', __name__)
 
-# Get passwords from environment variables
+# Passwords - using environment variables with fallbacks
 USER_PASSWORD = os.getenv('USER_PASSWORD', 'spicy2023')
 ADMIN_PASSWORD = os.getenv('ADMIN_PASSWORD', 'adminSpicy2023')
 
-@auth_bp.route('/api/login', methods=['POST'])
+@auth_bp.route('/login', methods=['POST', 'OPTIONS'])
 def login():
+    # Handle CORS preflight
+    if request.method == 'OPTIONS':
+        return '', 200
+    
     try:
+        # Get JSON data
         data = request.get_json()
+        
         if not data:
             return jsonify({
                 'success': False,
                 'message': 'No data provided'
             }), 400
             
-        password = data.get('password', '')
+        password = data.get('password', '').strip()
         
+        print(f"Login attempt received")  # Debug log
+        
+        if not password:
+            return jsonify({
+                'success': False,
+                'message': 'Password is required'
+            }), 400
+        
+        # Check passwords
         if password == USER_PASSWORD:
             return jsonify({
                 'success': True,
@@ -41,11 +53,15 @@ def login():
             }), 401
             
     except Exception as e:
+        print(f"Login error: {str(e)}")
         return jsonify({
             'success': False,
             'message': f'Server error: {str(e)}'
         }), 500
 
-@auth_bp.route('/api/check-auth', methods=['GET'])
-def check_auth():
-    return jsonify({'status': 'ok', 'service': 'auth'})
+@auth_bp.route('/test', methods=['GET'])
+def test():
+    return jsonify({
+        'status': 'auth working',
+        'message': 'Auth blueprint is functioning'
+    })
