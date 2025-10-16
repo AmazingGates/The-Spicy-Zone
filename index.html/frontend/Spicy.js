@@ -32,7 +32,7 @@ const API_BASE_URL = (() => {
     // Example for Heroku: return 'https://your-app-name.herokuapp.com/api';
     
     // TEMPORARY - Update this after you deploy your backend
-    return 'https://your-backend-url.onrender.com/api'; // CHANGE THIS
+    return 'https://spicyzone-backend.onrender.com/api'; // CHANGE THIS
 })();
 
 console.log('API Base URL:', API_BASE_URL);
@@ -474,4 +474,5 @@ function deleteMediaFromLocal(index) {
 // Initialize the page
 window.addEventListener('DOMContentLoaded', function() {
     console.log('SpicyZone initialized with backend:', API_BASE_URL);
+
 });
